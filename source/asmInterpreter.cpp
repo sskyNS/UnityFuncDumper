@@ -40,10 +40,10 @@ struct pointerDump
         std::string register_print;
 };
 
-void dumpPointers(const std::vector<std::string> UnityNames,
-                  const std::vector<uint32_t> UnityOffsets,
+void dumpPointers(const std::vector<std::string> &UnityNames,
+                  const std::vector<uint32_t> &UnityOffsets,
                   const DmntCheatProcessMetadata cheatMetadata,
-                  std::string unity_sdk)
+                  const std::string &unity_sdk)
 {
     ad_insn *insn = NULL;
     MachineState machineState = {0};
@@ -538,10 +538,10 @@ void dumpPointers(const std::vector<std::string> UnityNames,
                 fwrite("\n", 1, 1, text_file);
         }
         fclose(text_file);
-        Console::Printf("Dumped instructions to txt file:\n");
-        Console::Printf(path);
-        Console::Printf("\n");
+        // Seriously?
+        // Console::Printf("Dumped instructions to txt file:\n");
+        // Console::Printf(path);
+        // Console::Printf("\n");
+        Console::Printf("Dumped instructions to txt file: %s\n", path);
     }
-    result.clear();
-    forPass.clear();
 }

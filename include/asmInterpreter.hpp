@@ -1,13 +1,17 @@
 #pragma once
-#include <vector>
-#include <cstddef>
-#include <string>
-#include <cstring>
-#include <algorithm>
 #include "dmntcht.h"
-extern "C" {
+#include <algorithm>
+#include <cstddef>
+#include <cstring>
+#include <string>
+#include <vector>
+extern "C"
+{
 #include "armadillo.h"
 #include "strext.h"
 }
 
-void dumpPointers(std::vector<std::string> UnityNames, std::vector<uint32_t> UnityOffsets, DmntCheatProcessMetadata cheatMetadata, std::string unity_sdk);
+void dumpPointers(const std::vector<std::string> &UnityNames,
+                  const std::vector<uint32_t> &UnityOffsets,
+                  DmntCheatProcessMetadata cheatMetadata,
+                  const std::string &unity_sdk);

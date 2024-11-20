@@ -415,7 +415,7 @@ void dumpAsLog()
     // printf("Dumped log file to:\n", path);
     // printf(path);
     // printf("\n");
-    Console::Printf("Dumped log file to:\n%s\n", path);
+    Console::Printf("Dumped log file to: %s\n", path);
 }
 
 // Main program entrypoint
@@ -471,7 +471,7 @@ int main(int argc, char *argv[])
     pmdmntExit();
     if (error)
     {
-        Console::Printf("Press + to exit.");
+        Console::Printf("Press + to exit.\n");
         while (appletMainLoop())
         {
             // Scan the gamepad. This should be done once for each frame

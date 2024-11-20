@@ -64,7 +64,7 @@ class Console
             Instance.m_LineCount += NewLineCount;
 
             // This is to actually delete that many lines from the Console's string.
-            if (Instance.m_LineCount > Instance.m_MaxLineCount)
+            if (Instance.m_LineCount >= Instance.m_MaxLineCount)
             {
                 // Number of lines to trim
                 size_t LinesToTrim = Instance.m_LineCount - Instance.m_MaxLineCount;
