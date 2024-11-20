@@ -92,6 +92,14 @@ class Console
             Instance.Render();
         }
 
+        static void Reset(void)
+        {
+            Console &Instance = Console::GetInstance();
+
+            Instance.m_LineCount = 0;
+            Instance.m_ConsoleText.clear();
+        }
+
     private:
         // No constructing.
         Console(void) = default;

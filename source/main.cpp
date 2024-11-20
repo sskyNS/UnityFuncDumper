@@ -594,7 +594,9 @@ int main(int argc, char *argv[])
                 Console::Printf("Searching RAM...\n\n");
                 appletSetCpuBoostMode(ApmCpuBoostMode_FastLoad);
                 searchFunctionsUnity();
-                Console::Printf("\n^---------------------------------------------^\n\nSearch finished!\n");
+                Console::Printf("\n^---------------------------------------------^\n\n");
+                Console::Reset();
+                Console::Printf("Search finished!\n");
                 dumpAsLog();
                 appletSetCpuBoostMode(ApmCpuBoostMode_Normal);
                 delete[] memoryInfoBuffers;
