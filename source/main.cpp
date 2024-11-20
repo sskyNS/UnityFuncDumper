@@ -554,7 +554,9 @@ int main(int argc, char *argv[])
                 if (kDown & HidNpadButton_Plus)
                 {
                     dmntchtExit();
-                    consoleExit(NULL);
+                    // I really don't like this but there's no other way.
+                    SDL::Text::Exit();
+                    SDL::Exit();
                     return 0;
                 }
 
