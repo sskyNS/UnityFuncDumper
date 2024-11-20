@@ -1,0 +1,6 @@
+.vscode/
+*.lst
+.clang-format
+.clang-tidy
+.editorconfig
+*.log

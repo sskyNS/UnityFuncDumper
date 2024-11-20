@@ -44,7 +44,7 @@ TARGET		:=	$(APP_TITLE)
 BUILD		:=	build
 SOURCES		:=	source libs/armadillo/source
 DATA		:=	data
-INCLUDES	:=	include libs/armadillo/source
+INCLUDES	:=	include libs/armadillo/source libs/SDLLib/SDL/include
 #ROMFS	:=	romfs
 
 #---------------------------------------------------------------------------------
@@ -52,8 +52,8 @@ INCLUDES	:=	include libs/armadillo/source
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 
-CFLAGS	:=	-g -Wall -O2 -ffunction-sections \
-			$(ARCH) $(DEFINES)
+CFLAGS	:=	-g -Wall -O2 -ffunction-sections `sdl2-config --cflags` \
+			`freetype-config --cflags` $(ARCH) $(DEFINES)
 
 CFLAGS	+=	$(INCLUDE) -D__SWITCH__
 
@@ -61,8 +61,9 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=c++23
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
-
-LIBS	:= -lnx
+# These need this specific order to link correctly
+LIBS	:= ../libs/SDLLib/SDL/lib/libSDL.a -lSDL2_image `sdl2-config --libs` \
+		   `freetype-config --libs` -lpng -lwebp -ljpeg -lz -lnx
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -158,18 +159,28 @@ ifneq ($(ROMFS),)
 	export NROFLAGS += --romfsdir=$(CURDIR)/$(ROMFS)
 endif
 
-.PHONY: $(BUILD) clean all
+.PHONY: $(BUILD) SDLLib clean all
 
 #---------------------------------------------------------------------------------
 all: $(BUILD)
 
-$(BUILD):
+$(BUILD): SDLLib
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 #---------------------------------------------------------------------------------
+SDLLib:
+	$(MAKE) -C libs/SDLLib/SDL
+
+#---------------------------------------------------------------------------------
+
+send: $(BUILD)
+	@nxlink $(TARGET).nro
+
+#---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
+	@$(MAKE) -C libs/SDLLib/SDL clean
 ifeq ($(strip $(APP_JSON)),)
 	@rm -fr $(BUILD) $(TARGET).nro $(TARGET).nacp $(TARGET).elf
 else
