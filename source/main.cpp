@@ -411,9 +411,11 @@ void dumpAsLog()
         fwrite(temp, strlen(temp), 1, text_file);
     }
     fclose(text_file);
-    Console::Printf("Dumped log file to:\n");
-    Console::Printf(path);
-    Console::Printf("\n");
+    // lol who uses printf like this?
+    // printf("Dumped log file to:\n", path);
+    // printf(path);
+    // printf("\n");
+    Console::Printf("Dumped log file to:\n%s\n", path);
 }
 
 // Main program entrypoint
@@ -540,7 +542,7 @@ int main(int argc, char *argv[])
                                 "\uE0EF to Exit\n\n");
             }
             else
-                Console::Printf("\n----------\nPress \uE0E0 to Start\nPress \uE0EF to Exit\n\n");
+                Console::Printf("\n^----------^\nPress \uE0E0 to Start\nPress \uE0EF to Exit\n\n");
             bool overwrite = true;
             while (appletMainLoop())
             {
