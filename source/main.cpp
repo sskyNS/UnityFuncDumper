@@ -441,9 +441,9 @@ int main(int argc, char *argv[])
 
     // This will add whatever character is passed as a special character to change the text color. I saw this thing prints something in blue at some point?
     // SDLLib uses unions for colors instead of a struct. They must be assigned and passed like this: {0xRRGGBBAA}
-    SDL::Text::AddColorCharacter(L'^', {0x00FFFFFF});
-    SDL::Text::AddColorCharacter(L'*', {0x00FF00FF});
-    SDL::Text::AddColorCharacter(L'>', {0xFF0000FF});
+    SDL::Text::AddColorCharacter(L'^', {0x00FFFFFF}); // This makes text between two ^'s is a bright blue-green
+    SDL::Text::AddColorCharacter(L'*', {0x00FF00FF}); // This makes text between two *'s green.
+    SDL::Text::AddColorCharacter(L'>', {0xFF0000FF}); // This makes text between two >'s red.
 
     // You can use this to set the Console's font size to whatever you want. The default text size in pixels is 20.
     // Console::SetFontSize(20);
