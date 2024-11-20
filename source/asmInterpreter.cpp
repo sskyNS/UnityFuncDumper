@@ -2,7 +2,7 @@
 #include "Console.hpp"
 #include "UnityDumps.hpp"
 
-void wrongOperand(ad_insn *insn, const DmntCheatProcessMetadata cheatMetadata, uint64_t address)
+void wrongOperand(ad_insn *insn, const DmntCheatProcessMetadata &cheatMetadata, uint64_t address)
 {
     Console::Printf("Unsupported instruction! %s\n", insn->decoded);
     Console::Printf("offset: 0x%lx\n", address - cheatMetadata.main_nso_extents.base);

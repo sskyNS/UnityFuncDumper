@@ -94,7 +94,7 @@ bool checkIfUnity()
         }
         i++;
     }
-    Console::Printf("这个游戏没有使用Unity引擎!\n");
+    Console::Printf(">这个游戏没有使用Unity引擎!>\n");
     return false;
 }
 
