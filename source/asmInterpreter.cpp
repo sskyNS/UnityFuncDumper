@@ -42,7 +42,7 @@ struct pointerDump
 
 void dumpPointers(const std::vector<std::string> &UnityNames,
                   const std::vector<uint32_t> &UnityOffsets,
-                  const DmntCheatProcessMetadata cheatMetadata,
+                  const DmntCheatProcessMetadata &cheatMetadata,
                   const std::string &unity_sdk)
 {
     ad_insn *insn = NULL;
@@ -55,7 +55,7 @@ void dumpPointers(const std::vector<std::string> &UnityNames,
         auto itr = std::find(UnityNames.begin(), UnityNames.end(), unityDataStruct[i].search_name);
         if (itr == UnityNames.end())
         {
-            Console::Printf("%s was not found!\n", unityDataStruct[i].search_name);
+            Console::Printf(">%s was not found!>\n", unityDataStruct[i].search_name);
             continue;
         }
         size_t index = itr - UnityNames.begin();
@@ -74,7 +74,7 @@ void dumpPointers(const std::vector<std::string> &UnityNames,
             int rc = ArmadilloDisassemble(instruction, start_address, &insn);
             if (rc)
             {
-                Console::Printf("Disassembler error! 0x%x/%d\n", rc, rc);
+                Console::Printf(">Disassembler error! 0x%x/%d>\n", rc, rc);
                 ArmadilloDone(&insn);
                 return;
             }
@@ -507,7 +507,7 @@ void dumpPointers(const std::vector<std::string> &UnityNames,
     Console::Printf("Results: %ld\n", result.size());
     if (!text_file)
     {
-        Console::Printf("Couldn't create txt file!\n");
+        Console::Printf(">Couldn't create txt file!>\n");
     }
     else
     {
@@ -542,6 +542,6 @@ void dumpPointers(const std::vector<std::string> &UnityNames,
         // Console::Printf("Dumped instructions to txt file:\n");
         // Console::Printf(path);
         // Console::Printf("\n");
-        Console::Printf("Dumped instructions to txt file: %s\n", path);
+        Console::Printf("Dumped instructions to txt file: *%s*\n", path);
     }
 }

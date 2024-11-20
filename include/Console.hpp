@@ -5,8 +5,6 @@
 #include <cstring>
 #include <string>
 
-#include "Logger.hpp"
-
 /*
     biggestDump's console but modified.
 */
@@ -74,13 +72,10 @@ class Console
                     CurrentLinePosition = Instance.m_ConsoleText.find_first_of('\n', CurrentLinePosition) + 1;
                     if (CurrentLinePosition != Instance.m_ConsoleText.npos)
                     {
-                        Logger::Log("Erase.");
                         Instance.m_ConsoleText.erase(0, CurrentLinePosition);
                     }
                     else
                     {
-                        // If it's npos, no point in continuing loop.
-                        Logger::Log("Break");
                         break;
                     }
                     ++CurrentLinePosition;

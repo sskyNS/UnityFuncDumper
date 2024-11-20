@@ -85,7 +85,7 @@ bool checkIfUnity()
             char *result = searchString(buffer_c, (char *)test_4, memoryInfoBuffers[i].size);
             if (result)
             {
-                Console::Printf("%s\n", result);
+                Console::Printf("^%s^\n", result);
                 unity_sdk = result;
                 delete[] buffer_c;
                 return true;
@@ -357,13 +357,13 @@ void searchFunctionsUnity()
             if (string.length() > 0)
             {
                 UnityNames.push_back(string);
-                Console::Printf("#%ld: %s\n", UnityNames.size(), UnityNames.back().c_str());
+                Console::Printf("*#*^%ld^: %s\n", UnityNames.size(), UnityNames.back().c_str());
             }
         }
         else
             break;
     }
-    Console::Printf("Found %ld Unity functions.\n", UnityNames.size());
+    Console::Printf("Found *%ld* Unity functions.\n", UnityNames.size());
     uint64_t second_array = (u64)array_start + ((i - 1) * 8);
     for (size_t x = 0; x < UnityNames.size(); x++)
     {
@@ -415,7 +415,7 @@ void dumpAsLog()
     // printf("Dumped log file to:\n", path);
     // printf(path);
     // printf("\n");
-    Console::Printf("Dumped log file to: %s\n", path);
+    Console::Printf("Dumped log file to: *%s*\n", path);
 }
 
 // Main program entrypoint
@@ -442,6 +442,8 @@ int main(int argc, char *argv[])
     // This will add whatever character is passed as a special character to change the text color. I saw this thing prints something in blue at some point?
     // SDLLib uses unions for colors instead of a struct. They must be assigned and passed like this: {0xRRGGBBAA}
     SDL::Text::AddColorCharacter(L'^', {0x00FFFFFF});
+    SDL::Text::AddColorCharacter(L'*', {0x00FF00FF});
+    SDL::Text::AddColorCharacter(L'>', {0xFF0000FF});
 
     // You can use this to set the Console's font size to whatever you want. The default text size in pixels is 20.
     // Console::SetFontSize(20);
@@ -458,14 +460,14 @@ int main(int argc, char *argv[])
     bool error = false;
     if (!isServiceRunning("dmnt:cht"))
     {
-        Console::Printf("DMNT:CHT not detected!\n");
+        Console::Printf(">DMNT:CHT not detected!>\n");
         error = true;
     }
     pmdmntInitialize();
     uint64_t PID = 0;
     if (R_FAILED(pmdmntGetApplicationProcessId(&PID)))
     {
-        Console::Printf("Game not initialized.\n");
+        Console::Printf(">Game not initialized.>\n");
         error = true;
     }
     pmdmntExit();
@@ -493,7 +495,7 @@ int main(int argc, char *argv[])
     {
         pmdmntExit();
         size_t availableHeap = checkAvailableHeap();
-        Console::Printf("Available Heap: %ld MB\n", (availableHeap / (1024 * 1024)));
+        Console::Printf("Available Heap: *%ld* MB\n", (availableHeap / (1024 * 1024)));
         dmntchtInitialize();
         bool hasCheatProcess = false;
         dmntchtHasCheatProcess(&hasCheatProcess);
@@ -504,25 +506,24 @@ int main(int argc, char *argv[])
 
         Result res = dmntchtGetCheatProcessMetadata(&cheatMetadata);
         if (res)
-            Console::Printf("dmntchtGetCheatProcessMetadata ret: 0x%x\n", res);
+            Console::Printf(">dmntchtGetCheatProcessMetadata ret: 0x%x>\n", res);
 
         res = dmntchtGetCheatProcessMappingCount(&mappings_count);
         if (res)
-            Console::Printf("dmntchtGetCheatProcessMappingCount ret: 0x%x\n", res);
+            Console::Printf(">dmntchtGetCheatProcessMappingCount ret: 0x%x>\n", res);
         else
-            Console::Printf("Mapping count: %ld\n", mappings_count);
+            Console::Printf("Mapping count: *%ld*\n", mappings_count);
 
         memoryInfoBuffers = new MemoryInfo[mappings_count];
 
         res = dmntchtGetCheatProcessMappings(memoryInfoBuffers, mappings_count, 0, &mappings_count);
         if (res)
-            Console::Printf("DmntchtGetCheatProcessMappings返回: 0x%x\n", res);
+            Console::Printf(">DmntchtGetCheatProcessMappings返回: 0x%x>\n", res);
 
         //Test run
 
         if (checkIfUnity())
         {
-
             uint64_t BID = 0;
             memcpy(&BID, &(cheatMetadata.main_nso_build_id), 8);
             mkdir("sdmc:/switch/UnityFuncDumper/", 777);
@@ -604,7 +605,7 @@ int main(int argc, char *argv[])
             dumpPointers(UnityNames, UnityOffsets, cheatMetadata, unity_sdk);
         }
         dmntchtExit();
-        Console::Printf("Press \uE0EF to exit.");
+        Console::Printf("Press \uE0EF to exit.\n");
         while (appletMainLoop())
         {
             // Scan the gamepad. This should be done once for each frame
@@ -624,7 +625,7 @@ int main(int argc, char *argv[])
     }
 
     // Deinitialize and clean up resources used by the console (important!)
-    // There's no need to clear vectors like this. It's going to happen any way when they go out of scope or the program ends.
+    // There's no need to clear vectors like this. It's going to happen anyway when they go out of scope or the program ends.
     // UnityNames.clear();
     // UnityOffsets.clear();
     SDL::Text::Exit();

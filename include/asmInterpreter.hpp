@@ -13,5 +13,5 @@ extern "C"
 
 void dumpPointers(const std::vector<std::string> &UnityNames,
                   const std::vector<uint32_t> &UnityOffsets,
-                  DmntCheatProcessMetadata cheatMetadata,
+                  const DmntCheatProcessMetadata &cheatMetadata,
                   const std::string &unity_sdk);
