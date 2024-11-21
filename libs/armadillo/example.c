@@ -1329,7 +1329,7 @@ static const char *GET_FP_REG(const char **rtbl, unsigned int idx){
 }
 
 static void disp_operand(struct ad_operand operand){
-    printf("\t\tThis operand is of type %s\n", AD_TYPE_TABLE[operand.type]);
+    Console::Console::Printf("\t\tThis operand is of type %s\n", AD_TYPE_TABLE[operand.type]);
 
     if(operand.type == AD_OP_REG){
         if(operand.op_reg.sysreg != AD_NONE){

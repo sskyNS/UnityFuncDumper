@@ -1,0 +1,3 @@
+[submodule "libs/SDLLib"]
+	path = libs/SDLLib
+	url = https://github.com/J-D-K/SDLLib.git
