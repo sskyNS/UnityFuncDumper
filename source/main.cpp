@@ -10,6 +10,34 @@
 #include <switch.h>
 #include <sys/stat.h>
 
+// Declare global variable for heap size
+uint64_t existingHeapSize = 64 * 1024 * 1024; // Start with 128MB
+
+// Function to decide if memory should be expanded
+bool shouldExpandMemory() {
+    // Implement logic, for now, always returning true for demonstration
+    return true;
+}
+
+// Function to check and potentially expand memory
+void CheckAndExpandMemory() {
+    void* newHeapAddr = nullptr;
+    u64 additionalSize = 128 * 1024 * 1024; // Increase by 199MB
+
+    if (shouldExpandMemory()) { // Use the correct condition check here
+        Result result = svcSetHeapSize(&newHeapAddr, existingHeapSize + additionalSize);
+        if (R_SUCCEEDED(result)) {
+            existingHeapSize += additionalSize; // Update existing heap size
+            // Display success message with expanded heap size
+            Console::Printf("内存拓展成功！当前内存堆大小: %llu MB\n", existingHeapSize / (1024 * 1024));
+        } else {
+            // Error handling logic
+            Console::Printf("无法拓展可用内存堆! Code: 0x%x\n", result);
+        }
+    }
+}
+
+
 DmntCheatProcessMetadata cheatMetadata = {0};
 u64 mappings_count = 0;
 MemoryInfo *memoryInfoBuffers = 0;
@@ -115,14 +143,15 @@ void searchFunctionsUnity2()
     const char second_entry[] = "UnityEngineInternal.GIDebugVisualisation::PlayCycleMode";
     const char *first_result = 0;
     const char *second_result = 0;
-    Console::Printf("Base address: 0x%lx\n", cheatMetadata.main_nso_extents.base);
-    Console::Printf("Mapping %ld / %ld\r", i + 1, mappings_count);
+    Console::Printf("基地址: 0x%lx\n", cheatMetadata.main_nso_extents.base);
+    Console::Printf("映射 %ld / %ld\r", i + 1, mappings_count);
+
     while (i < mappings_count)
     {
         if ((memoryInfoBuffers[i].perm & Perm_R) == Perm_R && (memoryInfoBuffers[i].perm & Perm_Rx) != Perm_Rx &&
             (memoryInfoBuffers[i].type == MemType_CodeStatic || memoryInfoBuffers[i].type == MemType_CodeReadOnly))
         {
-            Console::Printf("Mapping %ld / %ld\r", i + 1, mappings_count);
+            Console::Printf("映射 %ld / %ld\r", i + 1, mappings_count);
             if (memoryInfoBuffers[i].size > 200'000'000)
             {
                 i++;
@@ -135,12 +164,12 @@ void searchFunctionsUnity2()
             if (result)
             {
                 first_result = (char *)(memoryInfoBuffers[i].addr + (result - buffer_c));
-                Console::Printf("Found 1. reference string at address 0x%lx\n", (uint64_t)first_result);
+                Console::Printf("在地址 0x%lx 发现第一个引用字符串\n", (uint64_t)first_result);
                 result = findStringInBuffer(buffer_c, memoryInfoBuffers[i].size, second_entry);
                 if (result)
                 {
                     second_result = (char *)(memoryInfoBuffers[i].addr + (result - buffer_c));
-                    Console::Printf("Found 2. reference string at address 0x%lx\n", (uint64_t)second_result);
+                    Console::Printf("在地址 0x%lx 发现第二个引用字符串\n", (uint64_t)second_result);
                     delete[] buffer_c;
                     break;
                 }
@@ -151,23 +180,23 @@ void searchFunctionsUnity2()
     }
     if (!first_result || !second_result)
     {
-        Console::Printf("Reference strings were not found! Aborting...\n");
+        Console::Printf("未找到引用字符串! 正在中止...\n");
         return;
     }
-    Console::Printf("Mapping %ld / %ld\r", i + 1, mappings_count);
+    Console::Printf("映射 %ld / %ld\r", i + 1, mappings_count);
     while (i < mappings_count)
     {
         if ((memoryInfoBuffers[i].perm & Perm_R) == Perm_R && (memoryInfoBuffers[i].perm & Perm_Rx) != Perm_Rx &&
             (memoryInfoBuffers[i].type == MemType_CodeStatic || memoryInfoBuffers[i].type == MemType_CodeReadOnly))
         {
-            Console::Printf("Mapping %ld / %ld\r", i + 1, mappings_count);
+            Console::Printf("映射 %ld / %ld\r", i + 1, mappings_count);
             if (memoryInfoBuffers[i].size > 200'000'000)
             {
                 i++;
                 continue;
             }
             int32_t *buffer = new int32_t[memoryInfoBuffers[i].size / sizeof(int32_t)];
-            Console::Printf("Buffer: 0x%lx, size: 0x%lx\n", (uint64_t)buffer, memoryInfoBuffers[i].size);
+            Console::Printf("缓冲区: 0x%lx, 大小: 0x%lx\n", (uint64_t)buffer, memoryInfoBuffers[i].size);
             dmntchtReadCheatProcessMemory(memoryInfoBuffers[i].addr, (void *)buffer, memoryInfoBuffers[i].size);
             int32_t *result = 0;
             for (size_t x = 0; x + 1 < memoryInfoBuffers[i].size / sizeof(uint32_t); x++)
@@ -186,7 +215,7 @@ void searchFunctionsUnity2()
                 i++;
                 continue;
             }
-            Console::Printf("Found string array at buffer address: 0x%lx\n", (uint64_t)result);
+            Console::Printf("在缓冲区地址 0x%lx 发现字符串数组\n", (uint64_t)result);
             size_t x = 0;
             while (true)
             {
@@ -211,7 +240,7 @@ void searchFunctionsUnity2()
         }
         i++;
     }
-    Console::Printf("Mapping %ld / %ld\r", i + 1, mappings_count);
+    Console::Printf("映射 %ld / %ld\r", i + 1, mappings_count);
     MemoryInfo main = {0};
     dmntchtQueryCheatProcessMemory(&main, cheatMetadata.main_nso_extents.base);
     while (i < mappings_count)
@@ -219,7 +248,7 @@ void searchFunctionsUnity2()
         if ((memoryInfoBuffers[i].perm & Perm_Rw) == Perm_Rw &&
             (memoryInfoBuffers[i].type == MemType_CodeMutable || memoryInfoBuffers[i].type == MemType_CodeWritable))
         {
-            Console::Printf("Mapping %ld / %ld\r", i + 1, mappings_count);
+            Console::Printf("映射 %ld / %ld\r", i + 1, mappings_count);
             if (memoryInfoBuffers[i].size > 200'000'000)
             {
                 i++;
@@ -254,7 +283,7 @@ void searchFunctionsUnity2()
                 UnityOffsets.push_back(buffer[start_index + x] - cheatMetadata.main_nso_extents.base);
             }
             delete[] buffer;
-            Console::Printf("Found %ld Unity functions.\n", UnityNames.size());
+            Console::Printf("发现 %ld 个 Unity 函数.\n", UnityNames.size());
             return;
         }
         i++;
@@ -266,15 +295,15 @@ void searchFunctionsUnity()
 {
     size_t i = 0;
     const char first_entry[] = "UnityEngineInternal.GIDebugVisualisation::ResetRuntimeInputTextures";
-    Console::Printf("Base address: 0x%lx\n", cheatMetadata.main_nso_extents.base);
-    Console::Printf("Mapping %ld / %ld\r", i + 1, mappings_count);
+    Console::Printf("基地址: 0x%lx\n", cheatMetadata.main_nso_extents.base);
+    Console::Printf("映射 %ld / %ld\r", i + 1, mappings_count);
     char *found_string = 0;
     while (i < mappings_count)
     {
         if ((memoryInfoBuffers[i].perm & Perm_R) == Perm_R && (memoryInfoBuffers[i].perm & Perm_Rx) != Perm_Rx &&
             (memoryInfoBuffers[i].type == MemType_CodeStatic || memoryInfoBuffers[i].type == MemType_CodeReadOnly))
         {
-            Console::Printf("Mapping %ld / %ld\r", i + 1, mappings_count);
+            Console::Printf("映射 %ld / %ld\r", i + 1, mappings_count);
             if (memoryInfoBuffers[i].size > 200'000'000)
             {
                 i++;
@@ -287,7 +316,7 @@ void searchFunctionsUnity()
             if (result)
             {
                 found_string = (char *)(memoryInfoBuffers[i].addr + (result - buffer_c));
-                Console::Printf("Found reference string at offset 0x%lx\n", (uint64_t)found_string);
+                Console::Printf("在偏移量 0x%lx 发现参考字符串\n", (uint64_t)found_string);
                 delete[] buffer_c;
                 break;
             }
@@ -297,18 +326,18 @@ void searchFunctionsUnity()
     }
     if (!found_string)
     {
-        Console::Printf("Didn't found reference string.\n");
+        Console::Printf("未找到参考字符串。\n");
         return;
     }
     i = 0;
     uint64_t *array_start = 0;
-    Console::Printf("Mapping %ld / %ld\r", i + 1, mappings_count);
+    Console::Printf("映射 %ld / %ld\r", i + 1, mappings_count);
     while (i < mappings_count)
     {
         if ((memoryInfoBuffers[i].perm & Perm_Rw) == Perm_Rw &&
             (memoryInfoBuffers[i].type == MemType_CodeMutable || memoryInfoBuffers[i].type == MemType_CodeWritable))
         {
-            Console::Printf("Mapping %ld / %ld\r", i + 1, mappings_count);
+            Console::Printf("映射 %ld / %ld\r", i + 1, mappings_count);
             if (memoryInfoBuffers[i].size > 200'000'000)
             {
                 i++;
@@ -329,7 +358,7 @@ void searchFunctionsUnity()
             if (result)
             {
                 array_start = result;
-                Console::Printf("Found string array at offset 0x%lx\n", (uint64_t)array_start);
+                Console::Printf("在偏移量 0x%lx 发现字符串数组\n", (uint64_t)array_start);
                 break;
             }
         }
@@ -337,7 +366,7 @@ void searchFunctionsUnity()
     }
     if (!array_start)
     {
-        Console::Printf("Didn't found array string. Initiating second method...\n");
+        Console::Printf("未找到数组字符串。启动第二种方法...\n");
         return searchFunctionsUnity2();
     }
     i = 0;
@@ -363,7 +392,7 @@ void searchFunctionsUnity()
         else
             break;
     }
-    Console::Printf("Found *%ld* Unity functions.\n", UnityNames.size());
+    Console::Printf("发现 *%ld* 个 Unity 函数。\n", UnityNames.size());
     uint64_t second_array = (u64)array_start + ((i - 1) * 8);
     for (size_t x = 0; x < UnityNames.size(); x++)
     {
@@ -371,7 +400,7 @@ void searchFunctionsUnity()
         uint64_t function_address = 0;
         if (dmntchtReadCheatProcessMemory(address, (void *)&function_address, sizeof(uint64_t)))
         {
-            Console::Printf("Something went wrong.\n");
+            Console::Printf("出现问题了。\n");
             break;
         }
         UnityOffsets.push_back(function_address - cheatMetadata.main_nso_extents.base);
@@ -385,7 +414,7 @@ void dumpAsLog()
 {
     if (UnityNames.size() != UnityOffsets.size())
     {
-        Console::Printf("Cannot produce log, Names and Offsets count doesn't match.\n");
+        Console::Printf("无法生成日志，名称和偏移量的数量不匹配。\n");
         return;
     }
     uint64_t BID = 0;
@@ -397,7 +426,7 @@ void dumpAsLog()
     FILE *text_file = fopen(path, "w");
     if (!text_file)
     {
-        Console::Printf("Couldn't create log file!\n");
+        Console::Printf("无法创建日志文件!\n");
         return;
     }
     fwrite(unity_sdk.c_str(), unity_sdk.size(), 1, text_file);
@@ -411,22 +440,11 @@ void dumpAsLog()
         fwrite(temp, strlen(temp), 1, text_file);
     }
     fclose(text_file);
-    // lol who uses printf like this?
-    // printf("Dumped log file to:\n", path);
-    // printf(path);
-    // printf("\n");
-    Console::Printf("Dumped log file to: *%s*\n", path);
+    Console::Printf("将日志文件转储到: *%s*\n", path);
 }
 
 // Main program entrypoint
-int main(int argc, char *argv[])
-{
-    // This example uses a text console, as a simple way to output text to the screen.
-    // If you want to write a software-rendered graphics application,
-    //   take a look at the graphics/simplegfx example, which uses the libnx Framebuffer API instead.
-    // If on the other hand you want to write an OpenGL based application,
-    //   take a look at the graphics/opengl set of examples, which uses EGL instead.
-    // None of that is true anymore SDL2
+int main(int argc, char *argv[]) {
     Logger::Initialize();
 
     if (!SDL::Initialize("UnityFuncDumper", 1280, 720))
@@ -436,66 +454,59 @@ int main(int argc, char *argv[])
 
     if (!SDL::Text::Initialize())
     {
-        Logger::Log("Error intializing SDL::Text: %s", SDL::GetErrorString());
+        Logger::Log("Error initializing SDL::Text: %s", SDL::GetErrorString());
     }
 
-    // This will add whatever character is passed as a special character to change the text color. I saw this thing prints something in blue at some point?
-    // SDLLib uses unions for colors instead of a struct. They must be assigned and passed like this: {0xRRGGBBAA}
-    SDL::Text::AddColorCharacter(L'^', {0x00FFFFFF}); // This makes text between two ^'s is a bright blue-green
-    SDL::Text::AddColorCharacter(L'*', {0x00FF00FF}); // This makes text between two *'s green.
-    SDL::Text::AddColorCharacter(L'>', {0xFF0000FF}); // This makes text between two >'s red.
+    SDL::Text::AddColorCharacter(L'^', {0x00FFFFFF});
+    SDL::Text::AddColorCharacter(L'*', {0x00FF00FF});
+    SDL::Text::AddColorCharacter(L'>', {0xFF0000FF});
 
-    // You can use this to set the Console's font size to whatever you want. The default text size in pixels is 20.
-    // Console::SetFontSize(20);
-    // This will set the maximum amount of lines for the console to display.
     Console::SetMaxLineCount(27);
 
-    // Configure our supported input layout: a single player with standard controller styles
     padConfigureInput(1, HidNpadStyleSet_NpadStandard);
 
-    // Initialize the default gamepad (which reads handheld mode inputs as well as the first connected controller)
     PadState pad;
     padInitializeDefault(&pad);
 
+    // Check and expand memory
+    CheckAndExpandMemory();
     bool error = false;
     if (!isServiceRunning("dmnt:cht"))
     {
-        Console::Printf(">DMNT:CHT not detected!>\n");
+        Console::Printf(">未检测到 DMNT:CHT 服务!>\n");
         error = true;
     }
     pmdmntInitialize();
     uint64_t PID = 0;
     if (R_FAILED(pmdmntGetApplicationProcessId(&PID)))
     {
-        Console::Printf(">Game not initialized.>\n");
+        Console::Printf(">游戏未初始化.>\n");
         error = true;
     }
     pmdmntExit();
+
+    // Check and expand memory if needed
+    CheckAndExpandMemory(); // Call the function here to attempt to expand the memory
+
     if (error)
     {
-        Console::Printf("Press + to exit.\n");
+        Console::Printf("按 + 键退出。\n");
         while (appletMainLoop())
         {
-            // Scan the gamepad. This should be done once for each frame
             padUpdate(&pad);
 
-            // padGetButtonsDown returns the set of buttons that have been
-            // newly pressed in this frame compared to the previous one
             u64 kDown = padGetButtonsDown(&pad);
 
             if (kDown & HidNpadButton_Plus)
-                break; // break in order to return to hbmenu
-
-            // Your code goes here
-
-            // Update the console, sending a new frame to the display lol not anymore
+                break;
         }
     }
     else
     {
         pmdmntExit();
         size_t availableHeap = checkAvailableHeap();
-        Console::Printf("Available Heap: *%ld* MB\n", (availableHeap / (1024 * 1024)));
+        Console::Printf("可用内存堆：*%ld* MB\n", (availableHeap / (1024 * 1024)));
+        // Initialize and check for Unity engine and handle mappings
         dmntchtInitialize();
         bool hasCheatProcess = false;
         dmntchtHasCheatProcess(&hasCheatProcess);
@@ -506,21 +517,19 @@ int main(int argc, char *argv[])
 
         Result res = dmntchtGetCheatProcessMetadata(&cheatMetadata);
         if (res)
-            Console::Printf(">dmntchtGetCheatProcessMetadata ret: 0x%x>\n", res);
+            Console::Printf(">dmntchtGetCheatProcessMetadata 返回: 0x%x>\n", res);
 
         res = dmntchtGetCheatProcessMappingCount(&mappings_count);
         if (res)
-            Console::Printf(">dmntchtGetCheatProcessMappingCount ret: 0x%x>\n", res);
+            Console::Printf(">dmntchtGetCheatProcessMappingCount 返回: 0x%x>\n", res);
         else
-            Console::Printf("Mapping count: *%ld*\n", mappings_count);
+            Console::Printf("映射数量: *%ld*\n", mappings_count);
 
         memoryInfoBuffers = new MemoryInfo[mappings_count];
 
         res = dmntchtGetCheatProcessMappings(memoryInfoBuffers, mappings_count, 0, &mappings_count);
         if (res)
             Console::Printf(">DmntchtGetCheatProcessMappings返回: 0x%x>\n", res);
-
-        //Test run
 
         if (checkIfUnity())
         {
@@ -539,11 +548,10 @@ int main(int argc, char *argv[])
             }
             if (file_exists)
             {
-                Console::Printf("\nFunctions offsets were already dumped.\nPress \uE0E0 to overwrite them.\nPress \uE0E2 to dump data.\nPress "
-                                "\uE0EF to Exit\n\n");
+                Console::Printf("\n函数偏移已被转储。\n按 \uE0E0 覆盖它们。\n按 \uE0E2 转储数据。\n按 \uE0EF 退出\n\n");
             }
             else
-                Console::Printf("\n^----------^\nPress \uE0E0 to Start\nPress \uE0EF to Exit\n\n");
+                Console::Printf("\n^----------^\n按 \uE0E0 开始\n按 \uE0EF 退出\n\n");
             bool overwrite = true;
             while (appletMainLoop())
             {
@@ -557,7 +565,6 @@ int main(int argc, char *argv[])
                 if (kDown & HidNpadButton_Plus)
                 {
                     dmntchtExit();
-                    // I really don't like this but there's no other way.
                     SDL::Text::Exit();
                     SDL::Exit();
                     return 0;
@@ -565,11 +572,11 @@ int main(int argc, char *argv[])
 
                 if (file_exists && (kDown & HidNpadButton_X))
                 {
-                    Console::Printf("Restoring offsets to program...\n");
+                    Console::Printf("将偏移量恢复到程序...\n");
                     text_file = fopen(path, "r");
                     if (!text_file)
                     {
-                        Console::Printf("It didn't open?!\n");
+                        Console::Printf("打开失败?!\n");
                     }
                     else
                     {
@@ -592,42 +599,30 @@ int main(int argc, char *argv[])
             }
             if (overwrite)
             {
-                Console::Printf("Searching RAM...\n\n");
+                Console::Printf("正在搜索 RAM...\n\n");
                 appletSetCpuBoostMode(ApmCpuBoostMode_FastLoad);
                 searchFunctionsUnity();
                 Console::Printf("\n^---------------------------------------------^\n\n");
                 Console::Reset();
-                Console::Printf("Search finished!\n");
+                Console::Printf("搜索完成!\n");
                 dumpAsLog();
                 appletSetCpuBoostMode(ApmCpuBoostMode_Normal);
                 delete[] memoryInfoBuffers;
             }
-            dumpPointers(UnityNames, UnityOffsets, cheatMetadata, unity_sdk);
         }
         dmntchtExit();
-        Console::Printf("Press \uE0EF to exit.\n");
+        Console::Printf("按 \uE0EF 键退出。\n");
         while (appletMainLoop())
         {
-            // Scan the gamepad. This should be done once for each frame
             padUpdate(&pad);
 
-            // padGetButtonsDown returns the set of buttons that have been
-            // newly pressed in this frame compared to the previous one
             u64 kDown = padGetButtonsDown(&pad);
 
             if (kDown & HidNpadButton_Plus)
-                break; // break in order to return to hbmenu
-
-            // Your code goes here
-
-            // Update the console, sending a new frame to the display lol
+                break;
         }
     }
 
-    // Deinitialize and clean up resources used by the console (important!)
-    // There's no need to clear vectors like this. It's going to happen anyway when they go out of scope or the program ends.
-    // UnityNames.clear();
-    // UnityOffsets.clear();
     SDL::Text::Exit();
     SDL::Exit();
     return 0;

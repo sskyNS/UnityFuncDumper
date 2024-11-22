@@ -4,29 +4,28 @@
 
 void wrongOperand(ad_insn *insn, const DmntCheatProcessMetadata &cheatMetadata, uint64_t address)
 {
-    Console::Printf("Unsupported instruction! %s\n", insn->decoded);
-    Console::Printf("offset: 0x%lx\n", address - cheatMetadata.main_nso_extents.base);
-    Console::Printf("Operands:\n");
-    for (int i = 0; i < insn->num_operands; i++)
-    {
-        Console::Printf("%d. type: ", i);
-        if (insn->operands[i].type == AD_OP_REG)
-        {
-            Console::Printf("REG: %s\n", insn->operands[i].op_reg.rtbl[0]);
+    Console::Printf("不支持的指令！%s\n", insn->decoded);
+    Console::Printf("偏移量：0x%lx\n", address - cheatMetadata.main_nso_extents.base);
+    Console::Printf("操作数：\n");
+}
+
+void yourFunction(ad_insn *insn, const DmntCheatProcessMetadata &cheatMetadata, uint64_t start_address) {
+    for (int i = 0; i < insn->num_operands; i++) {
+        Console::Printf("%d. 类型: ", i);
+        if (insn->operands[i].type == AD_OP_REG) {
+            Console::Printf("寄存器: %s\n", insn->operands[i].op_reg.rtbl[0]);
+        } else if (insn->operands[i].type == AD_OP_IMM) {
+            Console::Printf("立即数: 0x%lx\n", insn->operands[i].op_imm.bits);
+        } else if (insn->operands[i].type == AD_OP_SHIFT) {
+            Console::Printf("移位: 类型: %d, 数量: %d\n", insn->operands[i].op_shift.type, insn->operands[i].op_shift.amt);
+        } else {
+            Console::Printf("内存\n");
         }
-        else if (insn->operands[i].type == AD_OP_IMM)
-        {
-            Console::Printf("IMM: 0x%lx\n", insn->operands[i].op_imm.bits);
-        }
-        else if (insn->operands[i].type == AD_OP_SHIFT)
-        {
-            Console::Printf("SHIFT: type: %d, amt: %d\n", insn->operands[i].op_shift.type, insn->operands[i].op_shift.amt);
-        }
-        else
-            Console::Printf("MEM\n");
     }
     ArmadilloDone(&insn);
 }
+
+
 
 MachineState machineState_copy = {0};
 int registerPointer = 0;
@@ -51,34 +50,34 @@ void dumpPointers(const std::vector<std::string> &UnityNames,
     std::vector<std::string> forPass;
     for (size_t i = 0; i < unityDataStruct.size(); i++)
     {
-        forPass.clear();
-        auto itr = std::find(UnityNames.begin(), UnityNames.end(), unityDataStruct[i].search_name);
-        if (itr == UnityNames.end())
-        {
-            Console::Printf(">%s was not found!>\n", unityDataStruct[i].search_name);
-            continue;
-        }
-        size_t index = itr - UnityNames.begin();
-        uint64_t start_address = cheatMetadata.main_nso_extents.base + UnityOffsets[index];
-        uint32_t instruction = 0;
-        std::vector<uint64_t> returns;
-        while (true)
-        {
-            dmntchtReadCheatProcessMemory(start_address, (void *)&instruction, sizeof(uint32_t));
-            if (returns.size() == 0 && instruction == 0xD65F03C0)
-                break;
-            if (insn)
-            {
-                ArmadilloDone(&insn);
-            }
-            int rc = ArmadilloDisassemble(instruction, start_address, &insn);
-            if (rc)
-            {
-                Console::Printf(">Disassembler error! 0x%x/%d>\n", rc, rc);
-                ArmadilloDone(&insn);
-                return;
-            }
-            else
+forPass.clear();
+auto itr = std::find(UnityNames.begin(), UnityNames.end(), unityDataStruct[i].search_name);
+if (itr == UnityNames.end())
+{
+    Console::Printf(">未找到%s！>\n", unityDataStruct[i].search_name);
+    continue;
+}
+size_t index = itr - UnityNames.begin();
+uint64_t start_address = cheatMetadata.main_nso_extents.base + UnityOffsets[index];
+uint32_t instruction = 0;
+std::vector<uint64_t> returns;
+while (true)
+{
+    dmntchtReadCheatProcessMemory(start_address, (void *)&instruction, sizeof(uint32_t));
+    if (returns.size() == 0 && instruction == 0xD65F03C0)
+        break;
+    if (insn)
+    {
+        ArmadilloDone(&insn);
+    }
+    int rc = ArmadilloDisassemble(instruction, start_address, &insn);
+    if (rc)
+    {
+        Console::Printf(">反汇编器错误！0x%x/%d>\n", rc, rc);
+        ArmadilloDone(&insn);
+        return;
+    }
+    else
             {
                 forPass.push_back(insn->decoded);
             }
@@ -458,36 +457,37 @@ void dumpPointers(const std::vector<std::string> &UnityNames,
             }
             start_address += 4;
         }
-        char smallToPrint[64] = "";
-        if (unityDataStruct[i].get == false)
-            Console::Printf("%s: set = no register dump\n", unityDataStruct[i].output_name);
-        else
-        {
-            Console::Printf("%s: Register %c0=", unityDataStruct[i].output_name, unityDataStruct[i].data_type);
-            switch (unityDataStruct[i].data_type)
-            {
-                case 'w':
-                    Console::Printf("%d\n", (uint32_t)machineState_copy.X[0]);
-                    if (unityDataStruct[i].get)
-                        snprintf(smallToPrint, sizeof(smallToPrint), "int32=%d", (uint32_t)machineState_copy.X[0]);
-                    break;
-                case 'x':
-                    Console::Printf("%ld\n", machineState_copy.X[0]);
-                    if (unityDataStruct[i].get)
-                        snprintf(smallToPrint, sizeof(smallToPrint), "int64=%ld", machineState_copy.X[0]);
-                    break;
-                case 's':
-                    Console::Printf("%f\n", machineState_copy.S[0]);
-                    if (unityDataStruct[i].get)
-                        snprintf(smallToPrint, sizeof(smallToPrint), "float=%f", machineState_copy.S[0]);
-                    break;
-                case 'd':
-                    Console::Printf("%f\n", machineState_copy.D[0]);
-                    if (unityDataStruct[i].get)
-                        snprintf(smallToPrint, sizeof(smallToPrint), "double=%f", machineState_copy.D[0]);
-                    break;
-            }
-        }
+char smallToPrint[64] = "";
+if (unityDataStruct[i].get == false)
+    Console::Printf("%s: 设置 = 无寄存器转储\n", unityDataStruct[i].output_name);
+else
+{
+    Console::Printf("%s: 寄存器 %c0=", unityDataStruct[i].output_name, unityDataStruct[i].data_type);
+    switch (unityDataStruct[i].data_type)
+    {
+        case 'w':
+            Console::Printf("%d\n", (uint32_t)machineState_copy.X[0]);
+            if (unityDataStruct[i].get)
+                snprintf(smallToPrint, sizeof(smallToPrint), "int32=%d", (uint32_t)machineState_copy.X[0]);
+            break;
+        case 'x':
+            Console::Printf("%ld\n", machineState_copy.X[0]);
+            if (unityDataStruct[i].get)
+                snprintf(smallToPrint, sizeof(smallToPrint), "int64=%ld", machineState_copy.X[0]);
+            break;
+        case 's':
+            Console::Printf("%f\n", machineState_copy.S[0]);
+            if (unityDataStruct[i].get)
+                snprintf(smallToPrint, sizeof(smallToPrint), "float=%f", machineState_copy.S[0]);
+            break;
+        case 'd':
+            Console::Printf("%f\n", machineState_copy.D[0]);
+            if (unityDataStruct[i].get)
+                snprintf(smallToPrint, sizeof(smallToPrint), "double=%f", machineState_copy.D[0]);
+            break;
+    }
+}
+
         if (insn)
             ArmadilloDone(&insn);
         std::string toReturn = "";
@@ -504,10 +504,10 @@ void dumpPointers(const std::vector<std::string> &UnityNames,
     memcpy(&BID, &(cheatMetadata.main_nso_build_id), 8);
     snprintf(path, sizeof(path), "sdmc:/switch/UnityFuncDumper/%016lX/%016lX.txt", cheatMetadata.title_id, __builtin_bswap64(BID));
     FILE *text_file = fopen(path, "w");
-    Console::Printf("Results: %ld\n", result.size());
+    Console::Printf("输出: %ld\n", result.size());
     if (!text_file)
     {
-        Console::Printf(">Couldn't create txt file!>\n");
+        Console::Printf(">无法创建txt文件!>\n");
     }
     else
     {
@@ -542,6 +542,6 @@ void dumpPointers(const std::vector<std::string> &UnityNames,
         // Console::Printf("Dumped instructions to txt file:\n");
         // Console::Printf(path);
         // Console::Printf("\n");
-        Console::Printf("Dumped instructions to txt file: *%s*\n", path);
+        Console::Printf("将指令转储到 txt 文件: *%s*\n", path);
     }
 }
